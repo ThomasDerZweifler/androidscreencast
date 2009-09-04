@@ -25,9 +25,9 @@ public class JFrameMain extends JFrame {
 	public JPanelScreen jp;
 	public Injector injector;
 	
-	public JFrameMain(final Device device) throws IOException {
+	public JFrameMain(final Device device, final Injector injector) throws IOException {
+		this.injector = injector;
 		jp = new JPanelScreen(device);
-		injector = new Injector(device);
 		setTitle(""+device);
 		setIconImage(Toolkit.getDefaultToolkit().getImage(getClass().getResource("icon.png")));
 		setDefaultCloseOperation(3);
@@ -85,8 +85,13 @@ public class JFrameMain extends JFrame {
 			@Override
 			public void mouseReleased(MouseEvent arg0) {
 				try {
+					if(arg0.getButton() == MouseEvent.BUTTON3) {
+						jp.setLandscape(!jp.isLandscape());
+						return;
+					}
 					Point p2 = jp.getRawPoint(arg0.getPoint());
 					injector.injectMouse(ConstEvtMotion.ACTION_UP, p2.x, p2.y);
+					
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -109,6 +114,6 @@ public class JFrameMain extends JFrame {
 		jp.addMouseWheelListener(ma);
 		
 
-		setVisible(true);
+		
 	}
 }
