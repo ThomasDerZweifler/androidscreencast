@@ -1,6 +1,9 @@
 package net.srcz.android.screencast.injector;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.net.SocketException;
@@ -10,7 +13,7 @@ import com.android.ddmlib.SyncService.SyncResult;
 
 public class Injector {
 	private static final int PORT = 1324;
-	private static final String LOCAL_AGENT_JAR_LOCATION = "MyInjectEventapp.jar";
+	private static final String LOCAL_AGENT_JAR_LOCATION = "/MyInjectEventApp.jar";
 	private static final String REMOTE_AGENT_JAR_LOCATION = "/data/MyInjectEventapp.jar";
 	private static final String AGENT_MAIN_CLASS = "net.srcz.android.screencast.client.Main";
 	Device device;
@@ -54,8 +57,28 @@ public class Injector {
 	}
 
 	private void uploadAgent() {
+		InputStream agentJarStream = getClass().getResourceAsStream(LOCAL_AGENT_JAR_LOCATION);
+		if(agentJarStream == null)
+			throw new RuntimeException("Cannot find resource "+LOCAL_AGENT_JAR_LOCATION);
+		
+		File tempFile;
+		try {
+			tempFile = File.createTempFile("agent", ".jar");
+			FileOutputStream fos = new FileOutputStream(tempFile);
+			while(true) {
+				int val = agentJarStream.read();
+				if(val <= -1)
+					break;
+				fos.write(val);
+			}
+			agentJarStream.close();
+			fos.close();
+		} catch(Exception ex) {
+			throw new RuntimeException(ex);
+		}
+		
 		SyncResult result = device.getSyncService().pushFile(
-				LOCAL_AGENT_JAR_LOCATION, REMOTE_AGENT_JAR_LOCATION,
+				tempFile.getAbsolutePath(), REMOTE_AGENT_JAR_LOCATION,
 				new NullSyncProgressMonitor());
 		if (result.getCode() != 0)
 			throw new RuntimeException("code = " + result.getCode()

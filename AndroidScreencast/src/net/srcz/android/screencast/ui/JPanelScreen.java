@@ -20,7 +20,7 @@ public class JPanelScreen extends JPanel {
 	public float coef = 1;
 	double origX;
 	double origY;
-	boolean landscape = true;
+	boolean landscape = false;
 	
 	public void setLandscape(boolean landscape) {
 		this.landscape = landscape;

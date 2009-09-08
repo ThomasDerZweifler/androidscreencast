@@ -50,7 +50,7 @@ public class Main extends JPanel {
 					if(jd != null && jd.isVisible())
 						return;
 					jd = new JDialogError(ex);
-					SwingUtilities.invokeAndWait(new Runnable() {
+					SwingUtilities.invokeLater(new Runnable() {
 						
 						@Override
 						public void run() {
