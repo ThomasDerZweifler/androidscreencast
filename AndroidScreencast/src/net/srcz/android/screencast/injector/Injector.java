@@ -32,7 +32,7 @@ public class Injector {
 			startAgent();
 			Thread.sleep(2000);
 		} catch (InterruptedException e) {
-			e.printStackTrace();
+			throw new RuntimeException(e);
 		}
 
 		s = new Socket("127.0.0.1", PORT);
@@ -46,7 +46,7 @@ public class Injector {
 				try {
 					launchProg("" + PORT);
 				} catch (IOException e) {
-					e.printStackTrace();
+					throw new RuntimeException(e);
 				}
 			}
 		};

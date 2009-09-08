@@ -43,7 +43,7 @@ public class JFrameMain extends JFrame {
 					int code = KeyCodeConverter.getKeyCode(e);
 					injector.injectKeycode(ConstEvtKey.ACTION_DOWN,code);
 				} catch (IOException e1) {
-					e1.printStackTrace();
+					throw new RuntimeException(e1);
 				}
 			}
 			
@@ -53,7 +53,7 @@ public class JFrameMain extends JFrame {
 					int code = KeyCodeConverter.getKeyCode(e);
 					injector.injectKeycode(ConstEvtKey.ACTION_UP,code);
 				} catch (IOException e1) {
-					e1.printStackTrace();
+					throw new RuntimeException(e1);
 				}
 			}
 			
@@ -68,7 +68,7 @@ public class JFrameMain extends JFrame {
 					Point p2 = jp.getRawPoint(arg0.getPoint());
 					injector.injectMouse(ConstEvtMotion.ACTION_MOVE, p2.x, p2.y);
 				} catch (IOException e) {
-					e.printStackTrace();
+					throw new RuntimeException(e);
 				}
 			}
 
@@ -78,7 +78,7 @@ public class JFrameMain extends JFrame {
 					Point p2 = jp.getRawPoint(arg0.getPoint());
 					injector.injectMouse(ConstEvtMotion.ACTION_DOWN, p2.x, p2.y);
 				} catch (IOException e) {
-					e.printStackTrace();
+					throw new RuntimeException(e);
 				}
 			}
 
@@ -93,7 +93,7 @@ public class JFrameMain extends JFrame {
 					injector.injectMouse(ConstEvtMotion.ACTION_UP, p2.x, p2.y);
 					
 				} catch (IOException e) {
-					e.printStackTrace();
+					throw new RuntimeException(e);
 				}
 			}
 
@@ -104,7 +104,7 @@ public class JFrameMain extends JFrame {
 					//injector.injectKeycode(ConstEvtKey.ACTION_UP,code);
 					injector.injectTrackball(arg0.getWheelRotation() < 0 ? -1f : 1f);
 				} catch (IOException e) {
-					e.printStackTrace();
+					throw new RuntimeException(e);
 				}
 			}
 		};

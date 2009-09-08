@@ -1,10 +1,13 @@
 package net.srcz.android.screencast;
 
 import java.io.IOException;
+import java.lang.Thread.UncaughtExceptionHandler;
 
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 
 import net.srcz.android.screencast.injector.Injector;
+import net.srcz.android.screencast.ui.JDialogError;
 import net.srcz.android.screencast.ui.JFrameMain;
 import net.srcz.android.screencast.ui.JSplashScreen;
 
@@ -38,6 +41,32 @@ public class Main extends JPanel {
 				close();
 			}
 		});
+		Thread.setDefaultUncaughtExceptionHandler(new UncaughtExceptionHandler() {
+			JDialogError jd = null;
+			
+			@Override
+			public void uncaughtException(Thread arg0, Throwable ex) {
+				try {
+					if(jd != null && jd.isVisible())
+						return;
+					jd = new JDialogError(ex);
+					SwingUtilities.invokeAndWait(new Runnable() {
+						
+						@Override
+						public void run() {
+							jd.setVisible(true);
+							
+						}
+					});
+				} catch(Exception ex2) {
+					// ignored
+					ex2.printStackTrace();
+				}
+			}
+		});
+
+
+		
 		
 		JSplashScreen jw = new JSplashScreen("Getting devices list...");
 		jw.setVisible(true);
