@@ -44,7 +44,6 @@ public class Main extends JPanel {
 		Thread.setDefaultUncaughtExceptionHandler(new UncaughtExceptionHandler() {
 			JDialogError jd = null;
 			
-			@Override
 			public void uncaughtException(Thread arg0, Throwable ex) {
 				try {
 					if(jd != null && jd.isVisible())
@@ -52,7 +51,6 @@ public class Main extends JPanel {
 					jd = new JDialogError(ex);
 					SwingUtilities.invokeLater(new Runnable() {
 						
-						@Override
 						public void run() {
 							jd.setVisible(true);
 							

@@ -13,16 +13,13 @@ public class OutputStreamShellOutputReceiver implements IShellOutputReceiver {
 		this.os = os;
 	}
 	
-	@Override
 	public boolean isCancelled() {
 		return false;
 	}
 	
-	@Override
 	public void flush() {
 	}
 	
-	@Override
 	public void addOutput(byte[] buf, int off, int len) {
 		try {
 			os.write(buf,off,len);

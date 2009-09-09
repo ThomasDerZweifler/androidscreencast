@@ -8,13 +8,14 @@
       <homepage href="http://code.google.com/p/androidscreencast/"/>
       <description>Control an android device remotely !</description>
       <description kind="short">Control an android device remotely</description>
-      <icon href="images/draw.jpg"/>
       <offline-allowed/> 
+      <shortcut online="true"/>
+      <update check="timeout" policy="always"/>
    </information> 
    <resources>
       <j2se version="1.5+" href="http://java.sun.com/products/autodl/j2se"/>
       <j2se version="1.5+"/>
-      <jar href="androidscreencast.jar?3" main="true" download="eager"/>
+      <jar href="androidscreencast.jar" main="true" download="eager"/>
       <jar href="ddmlib.jar" main="false" download="eager"/>
    </resources>
    <application-desc main-class="net.srcz.android.screencast.Main"/>
