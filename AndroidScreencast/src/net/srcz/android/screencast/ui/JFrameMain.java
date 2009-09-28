@@ -18,17 +18,16 @@ import net.srcz.android.screencast.injector.ConstEvtMotion;
 import net.srcz.android.screencast.injector.Injector;
 import net.srcz.android.screencast.injector.KeyCodeConverter;
 
-import com.android.ddmlib.Device;
-
 public class JFrameMain extends JFrame {
 
-	public JPanelScreen jp;
-	public Injector injector;
+	public JPanelScreen jp = new JPanelScreen();
+	public Injector injector = null;
 	
-	public JFrameMain(final Device device, final Injector injector) throws IOException {
+	public void setInjector(Injector injector) {
 		this.injector = injector;
-		jp = new JPanelScreen(device);
-		setTitle(""+device);
+	}
+
+	public JFrameMain() throws IOException {
 		setIconImage(Toolkit.getDefaultToolkit().getImage(getClass().getResource("icon.png")));
 		setDefaultCloseOperation(3);
 		setLayout(new BorderLayout());
@@ -39,6 +38,8 @@ public class JFrameMain extends JFrame {
 
 			@Override
 			public void keyPressed(KeyEvent e) {
+				if(injector == null)
+					return;
 				try {
 					int code = KeyCodeConverter.getKeyCode(e);
 					injector.injectKeycode(ConstEvtKey.ACTION_DOWN,code);
@@ -49,6 +50,8 @@ public class JFrameMain extends JFrame {
 			
 			@Override
 			public void keyReleased(KeyEvent e) {
+				if(injector == null)
+					return;
 				try {
 					int code = KeyCodeConverter.getKeyCode(e);
 					injector.injectKeycode(ConstEvtKey.ACTION_UP,code);
@@ -64,6 +67,8 @@ public class JFrameMain extends JFrame {
 
 			@Override
 			public void mouseDragged(MouseEvent arg0) {
+				if(injector == null)
+					return;
 				try {
 					Point p2 = jp.getRawPoint(arg0.getPoint());
 					injector.injectMouse(ConstEvtMotion.ACTION_MOVE, p2.x, p2.y);
@@ -74,6 +79,8 @@ public class JFrameMain extends JFrame {
 
 			@Override
 			public void mousePressed(MouseEvent arg0) {
+				if(injector == null)
+					return;
 				try {
 					Point p2 = jp.getRawPoint(arg0.getPoint());
 					injector.injectMouse(ConstEvtMotion.ACTION_DOWN, p2.x, p2.y);
@@ -84,6 +91,8 @@ public class JFrameMain extends JFrame {
 
 			@Override
 			public void mouseReleased(MouseEvent arg0) {
+				if(injector == null)
+					return;
 				try {
 					if(arg0.getButton() == MouseEvent.BUTTON3) {
 						jp.setLandscape(!jp.isLandscape());
@@ -99,6 +108,8 @@ public class JFrameMain extends JFrame {
 
 			@Override
 			public void mouseWheelMoved(MouseWheelEvent arg0) {
+				if(injector == null)
+					return;
 				try {
 					//injector.injectKeycode(ConstEvtKey.ACTION_DOWN,code);
 					//injector.injectKeycode(ConstEvtKey.ACTION_UP,code);

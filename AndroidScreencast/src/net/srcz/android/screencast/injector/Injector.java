@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.net.SocketException;
+import java.net.UnknownHostException;
 
 import com.android.ddmlib.Device;
 import com.android.ddmlib.SyncService.SyncResult;
@@ -14,45 +15,27 @@ import com.android.ddmlib.SyncService.SyncResult;
 public class Injector {
 	private static final int PORT = 1324;
 	private static final String LOCAL_AGENT_JAR_LOCATION = "/MyInjectEventApp.jar";
-	private static final String REMOTE_AGENT_JAR_LOCATION = "/data/MyInjectEventapp.jar";
+	private static final String REMOTE_AGENT_JAR_LOCATION = "/data/local/tmp/InjectAgent.jar";
 	private static final String AGENT_MAIN_CLASS = "net.srcz.android.screencast.client.Main";
 	Device device;
 
 	Socket s;
 	OutputStream os;
+	Thread t = new Thread() {
+		public void run() {
+			try {
+				init();
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+		}
+	};
 
 	public Injector(Device d) throws IOException {
 		this.device = d;
-
-		device.createForward(PORT, PORT);
-
-		if (killRunningAgent())
-			System.out.println("Old client closed");
-		uploadAgent();
-
-		try {
-			Thread.sleep(1000);
-			startAgent();
-			Thread.sleep(2000);
-		} catch (InterruptedException e) {
-			throw new RuntimeException(e);
-		}
-
-		s = new Socket("127.0.0.1", PORT);
-		os = s.getOutputStream();
-		System.out.println("succes !");
 	}
 
-	private void startAgent() {
-		Thread t = new Thread() {
-			public void run() {
-				try {
-					launchProg("" + PORT);
-				} catch (IOException e) {
-					throw new RuntimeException(e);
-				}
-			}
-		};
+	public void start() {
 		t.start();
 	}
 
@@ -105,15 +88,29 @@ public class Injector {
 
 	public void close() {
 		try {
-			os.write("quit\n".getBytes());
-			os.flush();
-			os.close();
+			if(os != null) {
+				os.write("quit\n".getBytes());
+				os.flush();
+				os.close();
+			}
 			s.close();
 		} catch (Exception ex) {
-			// ignoré
+			// ignored
 		}
 
-		device.removeForward(PORT, PORT);
+		try {
+			s.close();
+		} catch (Exception ex) {
+			// ignored
+		}
+		try {
+			synchronized (device) {
+				if(device != null)
+					device.removeForward(PORT, PORT);
+			}
+		} catch(Exception ex) {
+			// ignored
+		}
 	}
 
 	public void injectMouse(int action, float x, float y) throws IOException {
@@ -151,6 +148,10 @@ public class Injector {
 
 	private void injectData(String data) throws IOException {
 		try {
+		if(os == null) {
+			System.out.println("Injector is not running yet...");
+			return;
+		}
 		os.write((data + "\n").getBytes());
 		os.flush();
 		} catch(SocketException sex) {
@@ -161,12 +162,48 @@ public class Injector {
 		}
 	}
 
+	private void init() throws UnknownHostException, IOException, InterruptedException {
+		synchronized (device) {
+			device.createForward(PORT, PORT);
+		}
+
+		if (killRunningAgent())
+			System.out.println("Old client closed");
+		uploadAgent();
+
+		Thread t = new Thread() {
+			public void run() {
+				for(int i=0; i<10; i++) {
+					try {
+						s = new Socket("127.0.0.1", PORT);
+						os = s.getOutputStream();
+						break;
+					} catch(Exception s) {
+						try {
+							sleep(1000);
+						} catch (InterruptedException e) {
+							return;
+						}
+					}
+				}
+			}
+		};
+		t.start();
+		launchProg("" + PORT);
+		System.out.println("succes !");
+	}
+	
 	private void launchProg(String cmdList) throws IOException {
+
+		
 		String fullCmd = "export CLASSPATH=" + REMOTE_AGENT_JAR_LOCATION;
 		fullCmd += "; exec app_process /system/bin " + AGENT_MAIN_CLASS + " "
 				+ cmdList;
 		System.out.println(fullCmd);
-		device.executeShellCommand(fullCmd, new OutputStreamShellOutputReceiver(System.out));
-		System.out.println("Prog ended");
+		synchronized (device) {
+			device.executeShellCommand(fullCmd, new OutputStreamShellOutputReceiver(System.out));
+			System.out.println("Prog ended");
+			device.executeShellCommand("rm "+REMOTE_AGENT_JAR_LOCATION, new OutputStreamShellOutputReceiver(System.out));
+		}
 	}
 }

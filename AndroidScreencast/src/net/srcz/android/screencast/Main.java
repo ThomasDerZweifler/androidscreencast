@@ -65,7 +65,6 @@ public class Main extends JPanel {
 
 
 		
-		
 		JSplashScreen jw = new JSplashScreen("Getting devices list...");
 		jw.setVisible(true);
 
@@ -75,7 +74,6 @@ public class Main extends JPanel {
 			jw.setVisible(false);
 			jw = null;
 		}
-		jf.setVisible(true);
 		
 
 
@@ -84,22 +82,32 @@ public class Main extends JPanel {
 	private void initialize(JSplashScreen jw) throws IOException {
 		AndroidDebugBridge bridge = AndroidDebugBridge.createBridge();
 		waitDeviceList(bridge);
-		
+
+
 		Device devices[] = bridge.getDevices();
 		final Device device = devices[0];
 
-		jw.setText("Starting input injector...");
-		Injector injector = new Injector(device);
-
-		jf = new JFrameMain(device, injector);
-
+		jf = new JFrameMain();
+		jf.setTitle(""+device);
+		
+		// Start polling
 		tPolling = new Thread(new Runnable() {
 
 			public void run() {
-				jf.jp.pollForever();
+				jf.jp.pollForever(device);
 			}
 		});
 		tPolling.start();
+		
+		// Show window
+		jf.setVisible(true);
+		
+		jw.setText("Starting input injector...");
+
+		Injector injector = new Injector(device);
+		injector.start();
+		jf.injector = injector;
+
 	}
 	
 	private void close() {

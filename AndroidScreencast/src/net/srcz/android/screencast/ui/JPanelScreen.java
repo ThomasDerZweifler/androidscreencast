@@ -7,6 +7,7 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 
 import com.android.ddmlib.Device;
 import com.android.ddmlib.RawImage;
@@ -16,7 +17,6 @@ public class JPanelScreen extends JPanel {
 
 	private BufferedImage image;
 	private Dimension size;
-	private Device device;
 	public float coef = 1;
 	double origX;
 	double origY;
@@ -28,21 +28,20 @@ public class JPanelScreen extends JPanel {
 	public boolean isLandscape() {
 		return landscape;
 	}
-	public JPanelScreen(Device device) {
+	
+	public JPanelScreen() {
 		image = null;
 		size = new Dimension();
-		this.device = device;
-		
 	}
+
 	public Dimension getPreferredSize() {
 		return size;
 	}
-
-
-	public void pollForever() {
+	
+	public void pollForever(Device device) {
 		do {
 			try {
-				fetchImage();
+				fetchImage(device);
 			} catch(java.nio.channels.ClosedByInterruptException ciex) {
 				break;
 			} catch (IOException e) {
@@ -61,8 +60,19 @@ public class JPanelScreen extends JPanel {
 
 
 	
-	private void fetchImage() throws IOException {
-		RawImage rawImage = device.getScreenshot();
+	private void fetchImage(Device device) throws IOException {
+		if(device == null) {
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				return;
+			}
+			return;
+		}
+		RawImage rawImage = null;
+		synchronized (device) {
+			rawImage = device.getScreenshot();
+		}
 
 		if (rawImage != null && rawImage.bpp == 16) {
 				/*
@@ -121,7 +131,12 @@ public class JPanelScreen extends JPanel {
 					image.setRGB(x, y, value);
 			}
 		}
-		repaint();
+		SwingUtilities.invokeLater(new Runnable() {
+			
+			public void run() {
+				repaint();
+			}
+		});
 	}
 	
 	public Point getRawPoint(Point p1) {
