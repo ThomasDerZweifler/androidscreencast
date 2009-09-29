@@ -19,7 +19,7 @@ public class Injector {
 	private static final String AGENT_MAIN_CLASS = "net.srcz.android.screencast.client.Main";
 	Device device;
 
-	Socket s;
+	public static Socket s;
 	OutputStream os;
 	Thread t = new Thread() {
 		public void run() {
@@ -60,6 +60,9 @@ public class Injector {
 			throw new RuntimeException(ex);
 		}
 		
+		if(device.getSyncService() == null)
+			throw new RuntimeException("SyncService is null, ADB crashed ?");
+		
 		SyncResult result = device.getSyncService().pushFile(
 				tempFile.getAbsolutePath(), REMOTE_AGENT_JAR_LOCATION,
 				new NullSyncProgressMonitor());
@@ -81,7 +84,7 @@ public class Injector {
 			s.close();
 			return true;
 		} catch (Exception ex) {
-			// ignoré
+			// ignorï¿½
 		}
 		return false;
 	}
@@ -105,8 +108,8 @@ public class Injector {
 		}
 		try {
 			synchronized (device) {
-				if(device != null)
-					device.removeForward(PORT, PORT);
+				/*if(device != null)
+					device.removeForward(PORT, PORT);*/
 			}
 		} catch(Exception ex) {
 			// ignored

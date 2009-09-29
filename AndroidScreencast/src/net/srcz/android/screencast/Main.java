@@ -1,23 +1,83 @@
 package net.srcz.android.screencast;
 
 import java.io.IOException;
-import java.lang.Thread.UncaughtExceptionHandler;
 
-import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
-
+import net.srcz.android.screencast.app.SwingApplication;
 import net.srcz.android.screencast.injector.Injector;
-import net.srcz.android.screencast.ui.JDialogError;
+import net.srcz.android.screencast.ui.JDialogDeviceList;
 import net.srcz.android.screencast.ui.JFrameMain;
 import net.srcz.android.screencast.ui.JSplashScreen;
 
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.Device;
 
-public class Main extends JPanel {
+public class Main extends SwingApplication {
 
 	JFrameMain jf;
-	Thread tPolling;
+	Injector injector;
+	Device device;
+	
+	public Main() throws IOException {
+	
+		JSplashScreen jw = new JSplashScreen("");
+		
+		try {
+			initialize(jw);
+		} finally {
+			jw.setVisible(false);
+			jw = null;
+		}
+	}
+	
+	private void initialize(JSplashScreen jw) throws IOException {
+		jw.setText("Getting devices list...");
+		jw.setVisible(true);
+		
+		AndroidDebugBridge bridge = AndroidDebugBridge.createBridge();
+		waitDeviceList(bridge);
+
+		Device devices[] = bridge.getDevices();
+		
+		jw.setVisible(false);
+
+		// Let the user choose the device
+		JDialogDeviceList jd = new JDialogDeviceList(devices);
+		jd.setVisible(true);
+		
+		device = jd.getDevice();
+		if(device == null) {
+			System.exit(0);
+			return;
+		}
+		
+		// Start showing the device screen
+		jf = new JFrameMain(device);
+		jf.setTitle(""+device);
+		
+		
+		// Show window
+		jf.setVisible(true);
+		
+		// Starting injector
+		jw.setText("Starting input injector...");
+		jw.setVisible(true);
+
+		injector = new Injector(device);
+		injector.start();
+		jf.setInjector(injector);
+
+		try {
+			Thread.sleep(2000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		// Start polling
+		jf.startCapture();
+		
+	}
+
 	
 	private void waitDeviceList(AndroidDebugBridge bridge) {
 		int count = 0;
@@ -35,87 +95,19 @@ public class Main extends JPanel {
 		}
 	}
 	
-	public Main() throws IOException {
-		Runtime.getRuntime().addShutdownHook(new Thread() {
-			public void run() {
-				close();
+	protected void close() {
+		System.out.println("cleaning up...");
+		if(injector != null)
+			injector.close();
+		if(jf != null)
+			jf.stopCapture();
+		if(device != null) {
+			synchronized (device) {
+				AndroidDebugBridge.terminate();
 			}
-		});
-		Thread.setDefaultUncaughtExceptionHandler(new UncaughtExceptionHandler() {
-			JDialogError jd = null;
-			
-			public void uncaughtException(Thread arg0, Throwable ex) {
-				try {
-					if(jd != null && jd.isVisible())
-						return;
-					jd = new JDialogError(ex);
-					SwingUtilities.invokeLater(new Runnable() {
-						
-						public void run() {
-							jd.setVisible(true);
-							
-						}
-					});
-				} catch(Exception ex2) {
-					// ignored
-					ex2.printStackTrace();
-				}
-			}
-		});
-
-
-		
-		JSplashScreen jw = new JSplashScreen("Getting devices list...");
-		jw.setVisible(true);
-
-		try {
-			initialize(jw);
-		} finally {
-			jw.setVisible(false);
-			jw = null;
 		}
-		
-
-
-	}
-	
-	private void initialize(JSplashScreen jw) throws IOException {
-		AndroidDebugBridge bridge = AndroidDebugBridge.createBridge();
-		waitDeviceList(bridge);
-
-
-		Device devices[] = bridge.getDevices();
-		final Device device = devices[0];
-
-		jf = new JFrameMain();
-		jf.setTitle(""+device);
-		
-		// Start polling
-		tPolling = new Thread(new Runnable() {
-
-			public void run() {
-				jf.jp.pollForever(device);
-			}
-		});
-		tPolling.start();
-		
-		// Show window
-		jf.setVisible(true);
-		
-		jw.setText("Starting input injector...");
-
-		Injector injector = new Injector(device);
-		injector.start();
-		jf.injector = injector;
-
-	}
-	
-	private void close() {
-		System.out.println("exiting...");
-		tPolling.interrupt();
-		jf.injector.close();
-		AndroidDebugBridge.terminate();
-		System.out.println("exiting... cleanup done");
+		System.out.println("cleanup done, exiting...");
+		super.close();
 	}
 
 	public static void main(String args[]) throws IOException {
