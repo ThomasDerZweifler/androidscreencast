@@ -21,7 +21,7 @@ public class Injector {
 
 	public static Socket s;
 	OutputStream os;
-	Thread t = new Thread() {
+	Thread t = new Thread("Agent Init") {
 		public void run() {
 			try {
 				init();
@@ -30,9 +30,12 @@ public class Injector {
 			}
 		}
 	};
+	
+	public ScreenCaptureThread screencapture;
 
 	public Injector(Device d) throws IOException {
 		this.device = d;
+		this.screencapture = new ScreenCaptureThread(d);
 	}
 
 	public void start() {
@@ -74,7 +77,7 @@ public class Injector {
 	/**
 	 * @return true if there was a client running
 	 */
-	private boolean killRunningAgent() {
+	private static boolean killRunningAgent() {
 		try {
 			Socket s = new Socket("127.0.0.1", PORT);
 			OutputStream os = s.getOutputStream();
@@ -100,7 +103,7 @@ public class Injector {
 		} catch (Exception ex) {
 			// ignored
 		}
-
+		screencapture.interrupt();
 		try {
 			s.close();
 		} catch (Exception ex) {
@@ -166,47 +169,57 @@ public class Injector {
 	}
 
 	private void init() throws UnknownHostException, IOException, InterruptedException {
-		synchronized (device) {
-			device.createForward(PORT, PORT);
-		}
+		device.createForward(PORT, PORT);
 
 		if (killRunningAgent())
 			System.out.println("Old client closed");
+		
 		uploadAgent();
 
-		Thread t = new Thread() {
+		Thread threadRunningAgent = new Thread("Running Agent") {
 			public void run() {
-				for(int i=0; i<10; i++) {
-					try {
-						s = new Socket("127.0.0.1", PORT);
-						os = s.getOutputStream();
-						break;
-					} catch(Exception s) {
-						try {
-							sleep(1000);
-						} catch (InterruptedException e) {
-							return;
-						}
-					}
+				try {
+					launchProg(""+PORT);
+				} catch (IOException e) {
+					e.printStackTrace();
 				}
 			}
 		};
-		t.start();
-		launchProg("" + PORT);
+		threadRunningAgent.start();
+		Thread.sleep(4000);
+		connectToAgent();
 		System.out.println("succes !");
 	}
 	
+	private void connectToAgent() {
+		for(int i=0; i<10; i++) {
+			try {
+				s = new Socket("127.0.0.1", PORT);
+				break;
+			} catch(Exception s) {
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					return;
+				}
+			}
+		}
+		System.out.println("Desktop => device socket connected");
+		screencapture.start();
+		try {
+			os = s.getOutputStream();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
 	private void launchProg(String cmdList) throws IOException {
-
-		
 		String fullCmd = "export CLASSPATH=" + REMOTE_AGENT_JAR_LOCATION;
 		fullCmd += "; exec app_process /system/bin " + AGENT_MAIN_CLASS + " "
 				+ cmdList;
 		System.out.println(fullCmd);
-		synchronized (device) {
 			device.executeShellCommand(fullCmd, new OutputStreamShellOutputReceiver(System.out));
 			System.out.println("Prog ended");
 			device.executeShellCommand("rm "+REMOTE_AGENT_JAR_LOCATION, new OutputStreamShellOutputReceiver(System.out));
-		}
 	}
 }

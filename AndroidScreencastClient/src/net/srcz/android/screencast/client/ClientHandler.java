@@ -1,7 +1,6 @@
 package net.srcz.android.screencast.client;
 
 import java.io.BufferedReader;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -45,14 +44,23 @@ public class ClientHandler {
 	
 	private void sendFrameBuffer() {
 		try {
+			Process p = Runtime.getRuntime().exec("/system/bin/cat /dev/graphics/fb0");
+			InputStream is = p.getInputStream();
+			System.out.println("Starting sending framebuffer");
 			OutputStream os = s.getOutputStream();
-			byte[] buff = new byte[8000];
+			byte[] buff = new byte[336*512*2];
 			while(true) {
-				FileInputStream fos = new FileInputStream("/dev/graphics/fb0");
-				int nb = fos.read(buff);
+				//FileInputStream fos = new FileInputStream("/dev/graphics/fb0");
+				int nb = is.read(buff);
+				if(nb < -1)
+					break;
+				//fos.close();
+				System.out.println("val "+nb);
 				os.write(buff,0,nb);
 				Thread.sleep(10);
 			}
+			is.close();
+			System.out.println("End of sending thread");
 			
 		} catch(Exception ex) {
 			ex.printStackTrace();

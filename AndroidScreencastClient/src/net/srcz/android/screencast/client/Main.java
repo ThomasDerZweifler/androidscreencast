@@ -1,18 +1,8 @@
 package net.srcz.android.screencast.client;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
-
-import android.os.IBinder;
-import android.os.RemoteException;
-import android.os.ServiceManager;
-import android.view.IWindowManager;
-import android.view.KeyEvent;
-import android.view.MotionEvent;
 
 
 public class Main {
@@ -81,7 +71,9 @@ public class Main {
 
 	
     public static void main(String[] args) {
-    	try {
+		System.out.println("[agent] Starting ...");
+
+		try {
     		if(args.length == 0)
     			throw new RuntimeException("Need >= 1 param");
     	    int port = Integer.parseInt(args[0]);

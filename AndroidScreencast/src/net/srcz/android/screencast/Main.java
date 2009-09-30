@@ -64,18 +64,7 @@ public class Main extends SwingApplication {
 
 		injector = new Injector(device);
 		injector.start();
-		jf.setInjector(injector);
-
-		try {
-			Thread.sleep(2000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		// Start polling
-		jf.startCapture();
-		
+		jf.setInjector(injector);	
 	}
 
 	
@@ -99,8 +88,7 @@ public class Main extends SwingApplication {
 		System.out.println("cleaning up...");
 		if(injector != null)
 			injector.close();
-		if(jf != null)
-			jf.stopCapture();
+	
 		if(device != null) {
 			synchronized (device) {
 				AndroidDebugBridge.terminate();

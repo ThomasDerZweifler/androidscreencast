@@ -4,12 +4,10 @@ import java.awt.Dimension;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 
 import javax.swing.SwingUtilities;
 
 import net.srcz.android.screencast.recording.QuickTimeOutputStream;
-import net.srcz.android.screencast.ui.JPanelScreen;
 
 import com.android.ddmlib.Device;
 import com.android.ddmlib.RawImage;
@@ -19,13 +17,25 @@ public class ScreenCaptureThread extends Thread {
 	private BufferedImage image;
 	private Dimension size;
 	private Device device;
-	private JPanelScreen jp;
 	private QuickTimeOutputStream qos = null;
 	private boolean landscape = false;
+	private ScreenCaptureListener listener = null;
+	
+	public ScreenCaptureListener getListener() {
+		return listener;
+	}
 
-	public ScreenCaptureThread(Device device, JPanelScreen jp) {
+	public void setListener(ScreenCaptureListener listener) {
+		this.listener = listener;
+	}
+
+	public interface ScreenCaptureListener {
+		public void handleNewImage(Dimension size, BufferedImage image, boolean landscape);
+	}
+	
+	public ScreenCaptureThread(Device device) {
+		super("Screen capture");
 		this.device = device;
-		this.jp = jp;
 		image = null;
 		size = new Dimension();
 	}
@@ -62,11 +72,12 @@ public class ScreenCaptureThread extends Thread {
 
 	public void stopRecording() {
 		try {
-			qos.close();
+			QuickTimeOutputStream o = qos;
+			qos = null;
+			o.close();
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
-		qos = null;
 	}
 
 	int nb = -1;
@@ -81,29 +92,46 @@ public class ScreenCaptureThread extends Thread {
 			}
 			return;
 		}
-		byte[] buff = new byte[5000];
 		
-		if(nb == -1) {
+			//System.out.println("Getting initial screenshot through ADB");
 			RawImage rawImage = null;
 			synchronized (device) {
 				rawImage = device.getScreenshot();
 			}
 			if(rawImage != null) {
+				//System.out.println("screenshot through ADB ok");
 				nb = rawImage.data.length;
 				rwidth = rawImage.width;
 				rheight = rawImage.height;
-				System.out.println("length = "+nb);
+				//System.out.println("length = "+nb);
+				display(rawImage.data,rwidth,rheight);
+			} else {
+				System.out.println("failed getting screenshot through ADB ok");
 			}
+			nb = 307200;
+			rwidth = 336;
+			rheight = 512;
+		try {
+			Thread.sleep(10);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
+		/*
+		byte[] buff = new byte[nb];
 		if(nb != -1) {
 			if(Injector.s != null) {
+				System.out.println("Reading screenshot");
 				final InputStream is = Injector.s.getInputStream();
 				while(true) {
 					int nbRead = is.read(buff,0,nb);
-					display(buff,rwidth,rheight);
+					if(nbRead != -1) {
+						System.out.println("nb Read "+nbRead);
+						display(buff,rwidth,rheight);
+					}
 				}
 			}
 		}
+		*/
 		//if (rawImage != null && rawImage.bpp == 16) {
 			
 			//display(rawImage.data, rawImage.width, rawImage.height);
@@ -168,12 +196,16 @@ public class ScreenCaptureThread extends Thread {
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
-		SwingUtilities.invokeLater(new Runnable() {
+		
+		if(listener != null) {
+			SwingUtilities.invokeLater(new Runnable() {
 
-			public void run() {
-				jp.handleNewImage(size, image, landscape);
-			}
-		});
+				public void run() {
+					listener.handleNewImage(size,image,landscape);
+					//jp.handleNewImage(size, image, landscape);
+				}
+			});
+		}
 	}
 
 }

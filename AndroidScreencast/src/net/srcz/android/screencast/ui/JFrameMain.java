@@ -11,6 +11,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 
 import javax.swing.JButton;
@@ -25,7 +26,7 @@ import net.srcz.android.screencast.injector.ConstEvtKey;
 import net.srcz.android.screencast.injector.ConstEvtMotion;
 import net.srcz.android.screencast.injector.Injector;
 import net.srcz.android.screencast.injector.KeyCodeConverter;
-import net.srcz.android.screencast.injector.ScreenCaptureThread;
+import net.srcz.android.screencast.injector.ScreenCaptureThread.ScreenCaptureListener;
 
 import com.android.ddmlib.Device;
 
@@ -38,16 +39,21 @@ public class JFrameMain extends JFrame {
 
 	private Device device;
 	private Injector injector;
-	private ScreenCaptureThread captureThread;
 	
 	public void setInjector(Injector injector) {
 		this.injector = injector;
+		injector.screencapture.setListener(new ScreenCaptureListener() {
+			
+			public void handleNewImage(Dimension size, BufferedImage image,
+					boolean landscape) {
+				jp.handleNewImage(size, image, landscape);
+			}
+		});
 	}
 
 	public JFrameMain(Device device) throws IOException {
 		this.device = device;
 		initialize();
-		this.captureThread = new ScreenCaptureThread(device, jp);
 	}
 	
 	public void initialize() throws IOException {
@@ -124,7 +130,7 @@ public class JFrameMain extends JFrame {
 					return;
 				try {
 					if(arg0.getButton() == MouseEvent.BUTTON3) {
-						captureThread.toogleOrientation();
+						injector.screencapture.toogleOrientation();
 						arg0.consume();
 						return;
 					}
@@ -184,19 +190,11 @@ public class JFrameMain extends JFrame {
 		jFileChooser.setFileFilter(filter);
 		int returnVal = jFileChooser.showSaveDialog(this);
 		if(returnVal == JFileChooser.APPROVE_OPTION) {
-			captureThread.startRecording(jFileChooser.getSelectedFile());
+			injector.screencapture.startRecording(jFileChooser.getSelectedFile());
 		}
 	}
 	
 	private void stopRecording() {
-		captureThread.stopRecording();
-	}
-	
-	public void startCapture() {
-		captureThread.start();
-	}
-	
-	public void stopCapture() {
-		captureThread.interrupt();
+		injector.screencapture.stopRecording();
 	}
 }
