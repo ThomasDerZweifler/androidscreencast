@@ -9,9 +9,10 @@ public class SwingApplication extends Application {
 
 	JDialogError jd = null;
 
-	public SwingApplication() {
+	public SwingApplication(boolean nativeLook) {
 		try {
-			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+			if(nativeLook)
+				UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		} catch(Exception ex) {
 			throw new RuntimeException(ex);
 		}

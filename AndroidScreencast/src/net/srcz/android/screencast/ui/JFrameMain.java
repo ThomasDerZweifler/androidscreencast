@@ -27,6 +27,7 @@ import net.srcz.android.screencast.injector.ConstEvtMotion;
 import net.srcz.android.screencast.injector.Injector;
 import net.srcz.android.screencast.injector.KeyCodeConverter;
 import net.srcz.android.screencast.injector.ScreenCaptureThread.ScreenCaptureListener;
+import net.srcz.android.screencast.ui.explorer.JFrameExplorer;
 
 import com.android.ddmlib.Device;
 
@@ -177,6 +178,7 @@ public class JFrameMain extends JFrame {
 			
 			public void actionPerformed(ActionEvent arg0) {
 				JFrameExplorer jf = new JFrameExplorer(device);
+				jf.setIconImage(getIconImage());
 				jf.setVisible(true);
 			}
 		});

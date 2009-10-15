@@ -17,8 +17,8 @@ public class Main extends SwingApplication {
 	Injector injector;
 	Device device;
 	
-	public Main() throws IOException {
-	
+	public Main(boolean nativeLook) throws IOException {
+		super(nativeLook);
 		JSplashScreen jw = new JSplashScreen("");
 		
 		try {
@@ -99,7 +99,8 @@ public class Main extends SwingApplication {
 	}
 
 	public static void main(String args[]) throws IOException {
-		new Main();
+		boolean nativeLook = args.length == 0 || !args[0].equalsIgnoreCase("nonativelook");
+		new Main(nativeLook);
 	}
 
 }

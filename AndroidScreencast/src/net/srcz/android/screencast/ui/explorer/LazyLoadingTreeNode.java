@@ -1,4 +1,4 @@
-package net.srcz.android.screencast.ui;
+package net.srcz.android.screencast.ui.explorer;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
