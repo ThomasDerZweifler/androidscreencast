@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.net.SocketException;
 import java.net.UnknownHostException;
 
 import net.srcz.android.screencast.api.AndroidDevice;
@@ -128,12 +127,12 @@ public class Injector {
 		injectData(cmdList2);
 	}
 
-	public void injectKeycode(int type, int keyCode) throws IOException {
+	public void injectKeycode(int type, int keyCode) {
 		String cmdList = "key/" + type + "/" + keyCode;
 		injectData(cmdList);
 	}
 
-	private void injectData(String data) throws IOException {
+	private void injectData(String data) {
 		try {
 			if (os == null) {
 				System.out.println("Injector is not running yet...");
@@ -141,11 +140,15 @@ public class Injector {
 			}
 			os.write((data + "\n").getBytes());
 			os.flush();
-		} catch (SocketException sex) {
-			s = new Socket("127.0.0.1", PORT);
-			os = s.getOutputStream();
-			os.write((data + "\n").getBytes());
-			os.flush();
+		} catch (Exception sex) {
+			try {
+				s = new Socket("127.0.0.1", PORT);
+				os = s.getOutputStream();
+				os.write((data + "\n").getBytes());
+				os.flush();
+			} catch(Exception ex) {
+				// ignored
+			}
 		}
 	}
 
