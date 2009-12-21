@@ -57,7 +57,7 @@
 	        filename="${dist}/${mainjar}" 
 	        targetfilename="${mainjar}"
 	        summary="app version ${version}"
-	        labels="Featured, Type-Executable, OpSys-All" />
+	        labels="Type-Executable, OpSys-All" />
 	<gcupload 
 	        username="${gc.username}" 
 	        password="${gc.password}" 
@@ -73,7 +73,7 @@
 	        filename="${dist}/${launcher}" 
 	        targetfilename="${launcher}"
 	        summary="launcher for version ${version}"
-	        labels="Type-Package, OpSys-All" />
+	        labels="Featured, Type-Package, OpSys-All" />
   </target>
 
   <target name="clean"
