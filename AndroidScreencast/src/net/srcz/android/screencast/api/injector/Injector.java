@@ -1,16 +1,16 @@
 package net.srcz.android.screencast.api.injector;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 
+import net.srcz.android.screencast.api.AndroidDevice;
+import net.srcz.android.screencast.api.StreamUtils;
+
 import com.android.ddmlib.IDevice;
-import com.android.ddmlib.SyncService.SyncResult;
 
 public class Injector {
 	private static final int PORT = 1324;
@@ -30,7 +30,7 @@ public class Injector {
 			}
 		}
 	};
-	
+
 	public ScreenCaptureThread screencapture;
 
 	public Injector(IDevice d) throws IOException {
@@ -43,35 +43,15 @@ public class Injector {
 	}
 
 	private void uploadAgent() throws IOException {
-		InputStream agentJarStream = getClass().getResourceAsStream(LOCAL_AGENT_JAR_LOCATION);
-		if(agentJarStream == null)
-			throw new RuntimeException("Cannot find resource "+LOCAL_AGENT_JAR_LOCATION);
-		
-		File tempFile;
 		try {
-			tempFile = File.createTempFile("agent", ".jar");
-			FileOutputStream fos = new FileOutputStream(tempFile);
-			while(true) {
-				int val = agentJarStream.read();
-				if(val <= -1)
-					break;
-				fos.write(val);
-			}
-			agentJarStream.close();
-			fos.close();
-		} catch(Exception ex) {
+			File tempFile = File.createTempFile("agent", ".jar");
+			StreamUtils.transfertResource(getClass(), LOCAL_AGENT_JAR_LOCATION,
+					tempFile);
+			new AndroidDevice(device).pushFile(tempFile,
+					REMOTE_AGENT_JAR_LOCATION);
+		} catch (Exception ex) {
 			throw new RuntimeException(ex);
 		}
-		
-		if(device.getSyncService() == null)
-			throw new RuntimeException("SyncService is null, ADB crashed ?");
-		
-		SyncResult result = device.getSyncService().pushFile(
-				tempFile.getAbsolutePath(), REMOTE_AGENT_JAR_LOCATION,
-				new NullSyncProgressMonitor());
-		if (result.getCode() != 0)
-			throw new RuntimeException("code = " + result.getCode()
-					+ " message= " + result.getMessage());
 	}
 
 	/**
@@ -94,7 +74,7 @@ public class Injector {
 
 	public void close() {
 		try {
-			if(os != null) {
+			if (os != null) {
 				os.write("quit\n".getBytes());
 				os.flush();
 				os.close();
@@ -111,10 +91,11 @@ public class Injector {
 		}
 		try {
 			synchronized (device) {
-				/*if(device != null)
-					device.removeForward(PORT, PORT);*/
+				/*
+				 * if(device != null) device.removeForward(PORT, PORT);
+				 */
 			}
-		} catch(Exception ex) {
+		} catch (Exception ex) {
 			// ignored
 		}
 	}
@@ -154,13 +135,13 @@ public class Injector {
 
 	private void injectData(String data) throws IOException {
 		try {
-		if(os == null) {
-			System.out.println("Injector is not running yet...");
-			return;
-		}
-		os.write((data + "\n").getBytes());
-		os.flush();
-		} catch(SocketException sex) {
+			if (os == null) {
+				System.out.println("Injector is not running yet...");
+				return;
+			}
+			os.write((data + "\n").getBytes());
+			os.flush();
+		} catch (SocketException sex) {
 			s = new Socket("127.0.0.1", PORT);
 			os = s.getOutputStream();
 			os.write((data + "\n").getBytes());
@@ -168,18 +149,19 @@ public class Injector {
 		}
 	}
 
-	private void init() throws UnknownHostException, IOException, InterruptedException {
+	private void init() throws UnknownHostException, IOException,
+			InterruptedException {
 		device.createForward(PORT, PORT);
 
 		if (killRunningAgent())
 			System.out.println("Old client closed");
-		
+
 		uploadAgent();
 
 		Thread threadRunningAgent = new Thread("Running Agent") {
 			public void run() {
 				try {
-					launchProg(""+PORT);
+					launchProg("" + PORT);
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -190,13 +172,13 @@ public class Injector {
 		connectToAgent();
 		System.out.println("succes !");
 	}
-	
+
 	private void connectToAgent() {
-		for(int i=0; i<10; i++) {
+		for (int i = 0; i < 10; i++) {
 			try {
 				s = new Socket("127.0.0.1", PORT);
 				break;
-			} catch(Exception s) {
+			} catch (Exception s) {
 				try {
 					Thread.sleep(1000);
 				} catch (InterruptedException e) {
@@ -212,14 +194,16 @@ public class Injector {
 			throw new RuntimeException(e);
 		}
 	}
-	
+
 	private void launchProg(String cmdList) throws IOException {
 		String fullCmd = "export CLASSPATH=" + REMOTE_AGENT_JAR_LOCATION;
 		fullCmd += "; exec app_process /system/bin " + AGENT_MAIN_CLASS + " "
 				+ cmdList;
 		System.out.println(fullCmd);
-			device.executeShellCommand(fullCmd, new OutputStreamShellOutputReceiver(System.out));
-			System.out.println("Prog ended");
-			device.executeShellCommand("rm "+REMOTE_AGENT_JAR_LOCATION, new OutputStreamShellOutputReceiver(System.out));
+		device.executeShellCommand(fullCmd,
+				new OutputStreamShellOutputReceiver(System.out));
+		System.out.println("Prog ended");
+		device.executeShellCommand("rm " + REMOTE_AGENT_JAR_LOCATION,
+				new OutputStreamShellOutputReceiver(System.out));
 	}
 }

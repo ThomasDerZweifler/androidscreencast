@@ -41,10 +41,14 @@ public class Main extends SwingApplication {
 		jw.setVisible(false);
 
 		// Let the user choose the device
-		JDialogDeviceList jd = new JDialogDeviceList(devices);
-		jd.setVisible(true);
-		
-		device = jd.getDevice();
+		if(devices.length == 1) {
+			device = devices[0];
+		} else {
+			JDialogDeviceList jd = new JDialogDeviceList(devices);
+			jd.setVisible(true);
+			
+			device = jd.getDevice();
+		}
 		if(device == null) {
 			System.exit(0);
 			return;
