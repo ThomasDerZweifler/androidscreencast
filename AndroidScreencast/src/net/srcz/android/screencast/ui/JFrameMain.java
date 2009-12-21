@@ -22,6 +22,7 @@ import javax.swing.JToggleButton;
 import javax.swing.JToolBar;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import net.srcz.android.screencast.api.AndroidDevice;
 import net.srcz.android.screencast.api.injector.ConstEvtKey;
 import net.srcz.android.screencast.api.injector.ConstEvtMotion;
 import net.srcz.android.screencast.api.injector.Injector;
@@ -37,6 +38,8 @@ public class JFrameMain extends JFrame {
 	private JToolBar jtb = new JToolBar();
 	private JToolBar jtbHardkeys = new JToolBar();
 	private JToggleButton jtbRecord = new JToggleButton("Record");
+	private JButton jbOpenUrl = new JButton("Open Url");
+	
 	private JButton jbExplorer = new JButton("Explore");
 	private JButton jbKbHome = new JButton("Home");
 	private JButton jbKbMenu = new JButton("Menu");
@@ -89,6 +92,7 @@ public class JFrameMain extends JFrame {
 		jtb.setFocusable(false);
 		jbExplorer.setFocusable(false);
 		jtbRecord.setFocusable(false);
+		jbOpenUrl.setFocusable(false);
 		
 		jbKbHome.addActionListener(new KbActionListener(ConstEvtKey.KEYCODE_HOME));
 		jbKbMenu.addActionListener(new KbActionListener(ConstEvtKey.KEYCODE_MENU));
@@ -227,6 +231,18 @@ public class JFrameMain extends JFrame {
 			}
 		});
 		jtb.add(jbExplorer);
+		
+		jbOpenUrl.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				JDialogUrl jdUrl = new JDialogUrl();
+				jdUrl.setVisible(true);
+				if(!jdUrl.result)
+					return;
+				String url = jdUrl.jtfUrl.getText();
+				new AndroidDevice(device).openUrl(url);
+			}
+		});
+		jtb.add(jbOpenUrl);
 		
 	}
 	

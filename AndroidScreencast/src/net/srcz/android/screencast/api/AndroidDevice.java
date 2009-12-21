@@ -22,6 +22,10 @@ public class AndroidDevice {
 		this.device = device;
 	}
 
+	public void openUrl(String url) {
+		executeCommand("am start "+url);
+	}
+	
 	public String executeCommand(String cmd) {
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
 		try {
