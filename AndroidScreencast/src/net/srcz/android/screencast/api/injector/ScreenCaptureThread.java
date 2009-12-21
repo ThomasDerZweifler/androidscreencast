@@ -1,4 +1,4 @@
-package net.srcz.android.screencast.injector;
+package net.srcz.android.screencast.api.injector;
 
 import java.awt.Dimension;
 import java.awt.image.BufferedImage;
@@ -7,16 +7,16 @@ import java.io.IOException;
 
 import javax.swing.SwingUtilities;
 
-import net.srcz.android.screencast.recording.QuickTimeOutputStream;
+import net.srcz.android.screencast.api.recording.QuickTimeOutputStream;
 
-import com.android.ddmlib.Device;
+import com.android.ddmlib.IDevice;
 import com.android.ddmlib.RawImage;
 
 public class ScreenCaptureThread extends Thread {
 
 	private BufferedImage image;
 	private Dimension size;
-	private Device device;
+	private IDevice device;
 	private QuickTimeOutputStream qos = null;
 	private boolean landscape = false;
 	private ScreenCaptureListener listener = null;
@@ -33,7 +33,7 @@ public class ScreenCaptureThread extends Thread {
 		public void handleNewImage(Dimension size, BufferedImage image, boolean landscape);
 	}
 	
-	public ScreenCaptureThread(Device device) {
+	public ScreenCaptureThread(IDevice device) {
 		super("Screen capture");
 		this.device = device;
 		image = null;

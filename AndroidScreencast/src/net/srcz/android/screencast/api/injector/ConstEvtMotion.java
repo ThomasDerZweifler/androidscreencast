@@ -1,4 +1,4 @@
-package net.srcz.android.screencast.injector;
+package net.srcz.android.screencast.api.injector;
 
 public class ConstEvtMotion {
 	  // Field descriptor #10 I

@@ -1,4 +1,4 @@
-package net.srcz.android.screencast.recording;
+package net.srcz.android.screencast.api.recording;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.WritableRaster;

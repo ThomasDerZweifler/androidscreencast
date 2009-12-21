@@ -1,4 +1,4 @@
-package net.srcz.android.screencast.injector;
+package net.srcz.android.screencast.api.injector;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -9,7 +9,7 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 
-import com.android.ddmlib.Device;
+import com.android.ddmlib.IDevice;
 import com.android.ddmlib.SyncService.SyncResult;
 
 public class Injector {
@@ -17,7 +17,7 @@ public class Injector {
 	private static final String LOCAL_AGENT_JAR_LOCATION = "/MyInjectEventApp.jar";
 	private static final String REMOTE_AGENT_JAR_LOCATION = "/data/local/tmp/InjectAgent.jar";
 	private static final String AGENT_MAIN_CLASS = "net.srcz.android.screencast.client.Main";
-	Device device;
+	IDevice device;
 
 	public static Socket s;
 	OutputStream os;
@@ -33,7 +33,7 @@ public class Injector {
 	
 	public ScreenCaptureThread screencapture;
 
-	public Injector(Device d) throws IOException {
+	public Injector(IDevice d) throws IOException {
 		this.device = d;
 		this.screencapture = new ScreenCaptureThread(d);
 	}
@@ -42,7 +42,7 @@ public class Injector {
 		t.start();
 	}
 
-	private void uploadAgent() {
+	private void uploadAgent() throws IOException {
 		InputStream agentJarStream = getClass().getResourceAsStream(LOCAL_AGENT_JAR_LOCATION);
 		if(agentJarStream == null)
 			throw new RuntimeException("Cannot find resource "+LOCAL_AGENT_JAR_LOCATION);

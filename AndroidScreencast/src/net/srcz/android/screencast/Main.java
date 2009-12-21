@@ -2,20 +2,20 @@ package net.srcz.android.screencast;
 
 import java.io.IOException;
 
+import net.srcz.android.screencast.api.injector.Injector;
 import net.srcz.android.screencast.app.SwingApplication;
-import net.srcz.android.screencast.injector.Injector;
 import net.srcz.android.screencast.ui.JDialogDeviceList;
 import net.srcz.android.screencast.ui.JFrameMain;
 import net.srcz.android.screencast.ui.JSplashScreen;
 
 import com.android.ddmlib.AndroidDebugBridge;
-import com.android.ddmlib.Device;
+import com.android.ddmlib.IDevice;
 
 public class Main extends SwingApplication {
 
 	JFrameMain jf;
 	Injector injector;
-	Device device;
+	IDevice device;
 	
 	public Main(boolean nativeLook) throws IOException {
 		super(nativeLook);
@@ -36,7 +36,7 @@ public class Main extends SwingApplication {
 		AndroidDebugBridge bridge = AndroidDebugBridge.createBridge();
 		waitDeviceList(bridge);
 
-		Device devices[] = bridge.getDevices();
+		IDevice devices[] = bridge.getDevices();
 		
 		jw.setVisible(false);
 

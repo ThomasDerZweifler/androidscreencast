@@ -18,7 +18,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.ListModel;
 
-import com.android.ddmlib.Device;
+import com.android.ddmlib.IDevice;
 
 public class JDialogDeviceList extends JDialog implements ActionListener {
 
@@ -35,9 +35,9 @@ public class JDialogDeviceList extends JDialog implements ActionListener {
 	JButton jbQuit = new JButton("Quit");
 
 	boolean cancelled = false;
-	Device[] devices;
+	IDevice[] devices;
 	
-	public JDialogDeviceList(Device[] devices) {
+	public JDialogDeviceList(IDevice[] devices) {
 		super();
 		setModal(true);
 		this.devices = devices;
@@ -92,10 +92,10 @@ public class JDialogDeviceList extends JDialog implements ActionListener {
 		});
 	}
 
-	public Device getDevice() {
+	public IDevice getDevice() {
 		if(cancelled)
 			return null;
-		return (Device)jlDevices.getSelectedValue();
+		return (IDevice)jlDevices.getSelectedValue();
 	}
 
 	public void actionPerformed(ActionEvent arg0) {

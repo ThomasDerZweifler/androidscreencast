@@ -18,10 +18,10 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.MutableTreeNode;
 import javax.swing.tree.TreePath;
 
-import net.srcz.android.screencast.injector.OutputStreamShellOutputReceiver;
+import net.srcz.android.screencast.api.injector.OutputStreamShellOutputReceiver;
 
-import com.android.ddmlib.Device;
 import com.android.ddmlib.FileListingService;
+import com.android.ddmlib.IDevice;
 import com.android.ddmlib.FileListingService.FileEntry;
 import com.android.ddmlib.FileListingService.IListingReceiver;
 import com.android.ddmlib.SyncService.ISyncProgressMonitor;
@@ -29,7 +29,7 @@ import com.android.ddmlib.SyncService.ISyncProgressMonitor;
 public class JFrameExplorer extends JFrame {
 
 	JTree jt;
-	Device device;
+	IDevice device;
 	FileListingService service;
 	
 	private class FileTreeNode extends DefaultMutableTreeNode {
@@ -45,44 +45,41 @@ public class JFrameExplorer extends JFrame {
 		
 	}
 	
-	private class FolderTreeNode extends LazyLoadingTreeNode {
+	private class FolderTreeNode extends LazyMutableTreeNode {
 		
 		String name;
 		String path;
 		
 		public FolderTreeNode(String name, String path) {
-			super(path,jt,false);
 			this.name = name;
 			this.path = path;
 		}
 		
 		@Override
-		public MutableTreeNode[] loadChildren(JTree tree) {
+		public void initChildren() {
 			ByteArrayOutputStream bos = new ByteArrayOutputStream();
 			try {
 				String cmd = "ls -l "+path;
 				device.executeShellCommand(cmd, new OutputStreamShellOutputReceiver(bos));
-				System.out.println("cmd " + cmd);
 				String s = new String(bos.toByteArray(),"UTF-8");
 				String[] entries = s.split("\r\n");
-				List<MutableTreeNode> nodes = new Vector<MutableTreeNode>();
 				for(int i=0; i<entries.length; i++) {
 					String[] data = entries[i].split(" ");
 					if(data.length < 4)
 						continue;
+					/*
 					for(int j=0; j<data.length; j++) {
 						System.out.println(j+" = "+data[j]);
 					}
+					*/
 					String attribs = data[0];
 					boolean directory = attribs.startsWith("d");
 					String name = data[data.length-1];
-					System.out.println("path="+path);
 					if(directory)
-						nodes.add(new FolderTreeNode(name, path + name + "/"));
+						add(new FolderTreeNode(name, path + name + "/"));
 					else
-						nodes.add(new FileTreeNode(name, path + name));
+						add(new FileTreeNode(name, path + name));
 				}
-				return nodes.toArray(new MutableTreeNode[0]);
 			} catch(Exception ex) {
 				throw new RuntimeException(ex);
 			}
@@ -94,7 +91,7 @@ public class JFrameExplorer extends JFrame {
 		
 	}
 	
-	public JFrameExplorer(Device device) {
+	public JFrameExplorer(IDevice device) {
 		this.device = device;
 		this.service = 	device.getFileListingService();
 		
@@ -132,6 +129,8 @@ public class JFrameExplorer extends JFrame {
 			public void mouseClicked(MouseEvent e) {
 				if(e.getClickCount() == 2) {
 					TreePath tp = jt.getPathForLocation(e.getX(), e.getY());
+					if(tp == null)
+						return;
 					if(!(tp.getLastPathComponent() instanceof FileTreeNode))
 						return;
 					FileTreeNode node = (FileTreeNode)tp.getLastPathComponent();

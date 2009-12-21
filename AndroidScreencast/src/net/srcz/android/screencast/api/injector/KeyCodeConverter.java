@@ -1,4 +1,4 @@
-package net.srcz.android.screencast.injector;
+package net.srcz.android.screencast.api.injector;
 
 import java.awt.event.KeyEvent;
 

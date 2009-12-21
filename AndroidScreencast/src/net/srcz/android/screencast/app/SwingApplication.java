@@ -1,5 +1,8 @@
 package net.srcz.android.screencast.app;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
@@ -26,6 +29,10 @@ public class SwingApplication extends Application {
 	@Override
 	protected void handleException(Thread thread, Throwable ex) {
 		try {
+			StringWriter sw = new StringWriter();
+			ex.printStackTrace(new PrintWriter(sw));
+			if(sw.toString().contains("SynthTreeUI"))
+				return;
 			ex.printStackTrace(System.err);
 			if(jd != null && jd.isVisible())
 				return;

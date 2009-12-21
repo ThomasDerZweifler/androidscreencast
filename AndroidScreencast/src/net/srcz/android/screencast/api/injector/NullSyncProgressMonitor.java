@@ -1,4 +1,4 @@
-package net.srcz.android.screencast.injector;
+package net.srcz.android.screencast.api.injector;
 
 import com.android.ddmlib.SyncService.ISyncProgressMonitor;
 
