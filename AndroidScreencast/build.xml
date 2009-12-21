@@ -10,7 +10,8 @@
   <property file="../${ant.project.name}.conf"/>
   <property name="mainjar" value="${ant.project.name}-${version}.jar"/>
   <property name="launcher" value="${ant.project.name}-${version}.jnlp"/>
-  <property name="ddmlib" value="${android.sdk}/tools/lib/ddmlib.jar"/>
+  <property name="ddmlib" value="ddmlib-${version}.jar"/>
+  <property name="sdk-ddmlib" value="${android.sdk}/tools/lib/ddmlib.jar"/>
 
   <target name="init">
     <!-- Create the time stamp -->
@@ -31,15 +32,20 @@
     <!-- Put everything in ${build} into the MyProject-${DSTAMP}.jar file -->
   	<mkdir dir="${dist}"/>
     <jar jarfile="${dist}/${mainjar}" basedir="${build}"/>
-  	<copy file="${ddmlib}" todir="${dist}"/>
+  	<copy file="${sdk-ddmlib}" tofile="${dist}/${ddmlib}"/>
   </target>
 
   <target name="jnlp" depends="dist">
   	<copy tofile="${dist}/${launcher}" file="androidscreencast.jnlp"/>
+  	<replace file="${dist}/${launcher}" token="androidscreencast.jnlp" value="${launcher}"/>
   	<replace file="${dist}/${launcher}" token="androidscreencast.jar" value="${mainjar}"/>
+  	<replace file="${dist}/${launcher}" token="ddmlib.jar" value="${ddmlib}"/>
   	<replace file="${dist}/${launcher}" token="version=&quot;1.0&quot;" value="version=&quot;${version}&quot;"/>
   	<signjar keystore="${sign.keystore}" storepass="${sign.storepass}" keypass="${sign.keypass}" 
   		jar="${dist}/${mainjar}"
+  		alias="${sign.alias}"/>
+  	<signjar keystore="${sign.keystore}" storepass="${sign.storepass}" keypass="${sign.keypass}" 
+  		jar="${dist}/${ddmlib}"
   		alias="${sign.alias}"/>
   </target>
 	
@@ -56,10 +62,18 @@
 	        username="${gc.username}" 
 	        password="${gc.password}" 
 	        projectname="${ant.project.name}" 
+	        filename="${dist}/${ddmlib}" 
+	        targetfilename="${ddmlib}"
+	        summary="ddmlib ${version}"
+	        labels="Type-Executable, OpSys-All" />
+	<gcupload 
+	        username="${gc.username}" 
+	        password="${gc.password}" 
+	        projectname="${ant.project.name}" 
 	        filename="${dist}/${launcher}" 
 	        targetfilename="${launcher}"
 	        summary="launcher for version ${version}"
-	        labels="Featured, Type-Package, OpSys-All" />
+	        labels="Type-Package, OpSys-All" />
   </target>
 
   <target name="clean"
