@@ -21,6 +21,36 @@ public class KeyCodeConverter {
 		if(c == '\b')
 			code = ConstEvtKey.KEYCODE_DEL; 
 
+		if(c == '\t')
+			code = ConstEvtKey.KEYCODE_TAB; 
+
+		if(c == '/')
+			code = ConstEvtKey.KEYCODE_SLASH; 
+
+		if(c == '\\')
+			code = ConstEvtKey.KEYCODE_BACKSLASH; 
+
+		if(c == ',')
+			code = ConstEvtKey.KEYCODE_COMMA; 
+
+		if(c == ';')
+			code = ConstEvtKey.KEYCODE_SEMICOLON; 
+
+		if(c == '.')
+			code = ConstEvtKey.KEYCODE_PERIOD; 
+
+		if(c == '*')
+			code = ConstEvtKey.KEYCODE_STAR; 
+
+		if(c == '+')
+			code = ConstEvtKey.KEYCODE_PLUS; 
+
+		if(c == '-')
+			code = ConstEvtKey.KEYCODE_MINUS; 
+
+		if(c == '=')
+			code = ConstEvtKey.KEYCODE_EQUALS; 
+
 		if(e.getKeyCode() == KeyEvent.VK_HOME)
 			code = ConstEvtKey.KEYCODE_HOME; 
 
@@ -54,11 +84,9 @@ public class KeyCodeConverter {
 		if(e.getKeyCode() == KeyEvent.VK_DOWN)
 			code = ConstEvtKey.KEYCODE_DPAD_DOWN; 
 
-		if(e.isShiftDown())
-			code |= ConstEvtKey.KEYCODE_SHIFT_LEFT;
-		
-		if(e.isAltDown())
-			code |= ConstEvtKey.KEYCODE_ALT_LEFT;
+		if(e.getKeyCode() == KeyEvent.VK_SHIFT)
+			code = ConstEvtKey.KEYCODE_SHIFT_LEFT; 
+
 		return code;
 	}
 	
