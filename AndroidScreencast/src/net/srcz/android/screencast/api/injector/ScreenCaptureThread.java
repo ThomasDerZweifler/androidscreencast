@@ -20,7 +20,7 @@ public class ScreenCaptureThread extends Thread {
 	private QuickTimeOutputStream qos = null;
 	private boolean landscape = false;
 	private ScreenCaptureListener listener = null;
-	
+
 	public ScreenCaptureListener getListener() {
 		return listener;
 	}
@@ -30,9 +30,10 @@ public class ScreenCaptureThread extends Thread {
 	}
 
 	public interface ScreenCaptureListener {
-		public void handleNewImage(Dimension size, BufferedImage image, boolean landscape);
+		public void handleNewImage(Dimension size, BufferedImage image,
+				boolean landscape);
 	}
-	
+
 	public ScreenCaptureThread(IDevice device) {
 		super("Screen capture");
 		this.device = device;
@@ -47,7 +48,9 @@ public class ScreenCaptureThread extends Thread {
 	public void run() {
 		do {
 			try {
-				fetchImage();
+				boolean ok = fetchImage();
+				if(!ok)
+					break;
 			} catch (java.nio.channels.ClosedByInterruptException ciex) {
 				break;
 			} catch (IOException e) {
@@ -61,6 +64,8 @@ public class ScreenCaptureThread extends Thread {
 
 	public void startRecording(File f) {
 		try {
+			if(!f.getName().toLowerCase().endsWith(".mov"))
+				f = new File(f.getAbsolutePath()+".mov");
 			qos = new QuickTimeOutputStream(f,
 					QuickTimeOutputStream.VideoFormat.JPG);
 		} catch (IOException e) {
@@ -80,89 +85,44 @@ public class ScreenCaptureThread extends Thread {
 		}
 	}
 
-	int nb = -1;
-	int rwidth = -1;
-	int rheight = -1;
-	private void fetchImage() throws IOException {
+	private boolean fetchImage() throws IOException {
 		if (device == null) {
+			// device not ready
 			try {
 				Thread.sleep(100);
 			} catch (InterruptedException e) {
-				return;
+				return false;
 			}
-			return;
+			return true;
 		}
-		
-			//System.out.println("Getting initial screenshot through ADB");
-			RawImage rawImage = null;
-			synchronized (device) {
-				rawImage = device.getScreenshot();
-			}
-			if(rawImage != null) {
-				//System.out.println("screenshot through ADB ok");
-				nb = rawImage.data.length;
-				rwidth = rawImage.width;
-				rheight = rawImage.height;
-				//System.out.println("length = "+nb);
-				display(rawImage.data,rwidth,rheight);
-			} else {
-				System.out.println("failed getting screenshot through ADB ok");
-			}
-			nb = 307200;
-			rwidth = 336;
-			rheight = 512;
+
+		// System.out.println("Getting initial screenshot through ADB");
+		RawImage rawImage = null;
+		synchronized (device) {
+			rawImage = device.getScreenshot();
+		}
+		if (rawImage != null) {
+			// System.out.println("screenshot through ADB ok");
+			display(rawImage);
+		} else {
+			System.out.println("failed getting screenshot through ADB ok");
+		}
 		try {
 			Thread.sleep(10);
 		} catch (InterruptedException e) {
-			e.printStackTrace();
+			return false;
 		}
-		/*
-		byte[] buff = new byte[nb];
-		if(nb != -1) {
-			if(Injector.s != null) {
-				System.out.println("Reading screenshot");
-				final InputStream is = Injector.s.getInputStream();
-				while(true) {
-					int nbRead = is.read(buff,0,nb);
-					if(nbRead != -1) {
-						System.out.println("nb Read "+nbRead);
-						display(buff,rwidth,rheight);
-					}
-				}
-			}
-		}
-		*/
-		//if (rawImage != null && rawImage.bpp == 16) {
-			
-			//display(rawImage.data, rawImage.width, rawImage.height);
-		//} else {
-			//System.err.println("Received invalid image");
-		//}
-		
-	}
 
-	/*
-	 * public void convert() { PaletteData palette = new PaletteData(0xf800,
-	 * 0x07e0, 0x001f); ImageData imageData = new ImageData(rawImage.width,
-	 * rawImage.height,rawImage.bpp, palette, 1, rawImage.data); return new
-	 * Image(getParent().getDisplay(), imageData);
-	 * 
-	 * byte buffer[] = rawImage.data; int index = 0; for (int y = 0; y <
-	 * rawImage.height; y++) { for (int x = 0; x < rawImage.width; x++) { int
-	 * value = buffer[index++] & 0xff; value |= buffer[index++] << 8 & 0xff00;
-	 * int r = (value >> 11 & 0x1f) << 3; int g = (value >> 5 & 0x3f) << 2; int
-	 * b = (value & 0x1f) << 3; value = 0xFF << 24 | r << 16 | g << 8 | b;
-	 * //scanline[x] = 0xff000000 | r << 16 | g << 8 | b; image.setRGB(x, y,
-	 * value); } } }
-	 */
+		return true;
+	}
 
 	public void toogleOrientation() {
 		landscape = !landscape;
 	}
-	
-	public void display(byte[] buffer, int width, int height) {
-		int width2 = landscape ? height : width;
-		int height2 = landscape ? width : height;
+
+	public void display(RawImage rawImage) {
+		int width2 = landscape ? rawImage.height : rawImage.width;
+		int height2 = landscape ? rawImage.width : rawImage.height;
 		if (image == null) {
 			image = new BufferedImage(width2, height2,
 					BufferedImage.TYPE_INT_RGB);
@@ -175,34 +135,30 @@ public class ScreenCaptureThread extends Thread {
 			}
 		}
 		int index = 0;
-		for (int y = 0; y < height; y++) {
-			for (int x = 0; x < width; x++) {
-				int value = buffer[index++] & 0xff;
-				value |= buffer[index++] << 8 & 0xff00;
-				int r = (value >> 11 & 0x1f) << 3;
-				int g = (value >> 5 & 0x3f) << 2;
-				int b = (value & 0x1f) << 3;
-
-				value = 0xFF << 24 | r << 16 | g << 8 | b;
+		int indexInc = rawImage.bpp >> 3;
+		for (int y = 0; y < rawImage.height; y++) {
+			for (int x = 0; x < rawImage.width; x++, index += indexInc) {
+				int value = rawImage.getARGB(index);
 				if (landscape)
-					image.setRGB(y, width - x - 1, value);
+					image.setRGB(y, rawImage.width - x - 1, value);
 				else
 					image.setRGB(x, y, value);
 			}
 		}
+
 		try {
 			if (qos != null)
 				qos.writeFrame(image, 10);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
-		
-		if(listener != null) {
+
+		if (listener != null) {
 			SwingUtilities.invokeLater(new Runnable() {
 
 				public void run() {
-					listener.handleNewImage(size,image,landscape);
-					//jp.handleNewImage(size, image, landscape);
+					listener.handleNewImage(size, image, landscape);
+					// jp.handleNewImage(size, image, landscape);
 				}
 			});
 		}
