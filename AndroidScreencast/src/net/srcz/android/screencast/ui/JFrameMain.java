@@ -110,6 +110,12 @@ public class JFrameMain extends JFrame {
 		jbExplorer.setFocusable(false);
 		jtbRecord.setFocusable(false);
 		jbOpenUrl.setFocusable(false);
+		jbKbHome.setFocusable(false);
+		jbKbMenu.setFocusable(false);
+		jbKbBack.setFocusable(false);
+		jbKbSearch.setFocusable(false);
+		jbKbPhoneOn.setFocusable(false);
+		jbKbPhoneOff.setFocusable(false);
 
 		jbKbHome.addActionListener(new KbActionListener(
 				ConstEvtKey.KEYCODE_HOME));
