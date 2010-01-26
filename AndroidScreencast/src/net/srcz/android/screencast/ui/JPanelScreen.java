@@ -14,7 +14,7 @@ public class JPanelScreen extends JPanel {
 	double origY;
 	boolean landscape;
 	
-	Dimension size = new Dimension();
+	Dimension size = null;
 	Image image = null;
 	
 	public JPanelScreen() {
@@ -29,6 +29,8 @@ public class JPanelScreen extends JPanel {
 	}
 	
 	protected void paintComponent(Graphics g) {
+		if(size == null)
+			return;
 		if(size.height == 0)
 			return;
 		g.clearRect(0, 0, getWidth(), getHeight());

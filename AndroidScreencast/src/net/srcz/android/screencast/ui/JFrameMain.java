@@ -40,6 +40,7 @@ public class JFrameMain extends JFrame {
 	private JToolBar jtbHardkeys = new JToolBar();
 	private JToggleButton jtbRecord = new JToggleButton("Record");
 	private JButton jbOpenUrl = new JButton("Open Url");
+	JScrollPane jsp;
 
 	private JButton jbExplorer = new JButton("Explore");
 	private JButton jbKbHome = new JButton("Home");
@@ -68,13 +69,20 @@ public class JFrameMain extends JFrame {
 
 	private IDevice device;
 	private Injector injector;
-
+	private Dimension oldImageDimension = null;
+	
 	public void setInjector(Injector injector) {
 		this.injector = injector;
 		injector.screencapture.setListener(new ScreenCaptureListener() {
 
 			public void handleNewImage(Dimension size, BufferedImage image,
 					boolean landscape) {
+				if(oldImageDimension == null ||
+						!size.equals(oldImageDimension)) {
+					jsp.setPreferredSize(size);
+					JFrameMain.this.pack();
+					oldImageDimension = size;
+				}
 				jp.handleNewImage(size, image, landscape);
 			}
 		});
@@ -143,9 +151,9 @@ public class JFrameMain extends JFrame {
 		setLayout(new BorderLayout());
 		add(jtb, BorderLayout.NORTH);
 		add(jtbHardkeys, BorderLayout.SOUTH);
-		JScrollPane jsp = new JScrollPane(jp);
+		jsp = new JScrollPane(jp);
 		add(jsp, BorderLayout.CENTER);
-		jsp.setPreferredSize(new Dimension(336 * 1, 512 * 1));
+		jsp.setPreferredSize(new Dimension(100, 100));
 		pack();
 		setLocationRelativeTo(null);
 		/*
