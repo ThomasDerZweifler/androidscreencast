@@ -82,7 +82,7 @@ public class Main extends SwingApplication {
 				// pass
 			}
 			// let's not wait > 10 sec.
-			if (count > 100) {
+			if (count > 300) {
 				throw new RuntimeException("Timeout getting device list!");
 			}
 		}
